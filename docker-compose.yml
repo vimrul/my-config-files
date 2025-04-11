@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: odoo18-db
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgresql_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data/pgdata
+    secrets:
+      - postgresql_password
+
+  web:
+    image: odoo:18
+    container_name: odoo18
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8055:8069"
+    environment:
+      HOST: db
+      USER: odoo
+      PASSWORD_FILE: /run/secrets/postgresql_password
+    volumes:
+      - odoo-web-data:/var/lib/odoo
+      - ./addons:/mnt/extra-addons
+      - ./config:/etc/odoo
+    secrets:
+      - postgresql_password
+
+volumes:
+  odoo-db-data:
+  odoo-web-data:
+
+secrets:
+  postgresql_password:
+    file: ./odoo_pg_pass
